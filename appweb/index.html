@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Aplicación Web para Consumo de Servicios</title>
+<style>
+  /* Aquí podrías añadir estilos para mejorar la presentación */
+</style>
+<script>
+  // Función para insertar datos usando el servicio SOAP
+  function insertarConSoap() {
+    var apellido = document.getElementById('apellido').value;
+    var nombre = document.getElementById('nombre').value;
+    var dni = document.getElementById('dni').value;
+
+    // Aquí tendrías que construir el cuerpo del mensaje SOAP
+    var soapRequest =
+      `<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+          <s:Body>
+            <InsertarPersona xmlns="http://tu-namespace-aquí">
+              <Apellido>${apellido}</Apellido>
+              <Nombre>${nombre}</Nombre>
+              <DNI>${dni}</DNI>
+            </InsertarPersona>
+          </s:Body>
+        </s:Envelope>`;
+
+    fetch('http://localhost:8080/insertar_con_soap', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/xml',
+        'SOAPAction': 'http://tu-namespace-aquí/InsertarPersona'
+      },
+      body: soapRequest
+    })
+    .then(response => response.text())
+    .then(responseXML => {
+      // Aquí procesarías la respuesta SOAP
+      console.log(responseXML);
+    })
+    .catch(error => console.error('Error:', error));
+  }
+
+  // Función para consultar datos usando el servicio REST
+  function consultarConRest() {
+    fetch('http://localhost:8888/consultar_con_rest')
+    .then(response => response.json())
+    .then(data => {
+      var tabla = document.getElementById('tabla-personas');
+      tabla.innerHTML = ''; // Limpiar la tabla antes de añadir los nuevos datos
+      data.forEach(persona => {
+        tabla.innerHTML += `<tr><td>${persona.Apellido}</td><td>${persona.Nombre}</td><td>${persona.DNI}</td></tr>`;
+      });
+    })
+    .catch(error => console.error('Error:', error));
+  }
+
+  // Llamar a consultarConRest al cargar la página para llenar la tabla inicialmente
+  window.onload = consultarConRest;
+</script>
+</head>
+<body>
+
+<h2>Ingresar Datos de Persona</h2>
+<label for="apellido">Apellido:</label>
+<input type="text" id="apellido" name="apellido"><br>
+<label for="nombre">Nombre:</label>
+<input type="text" id="nombre" name="nombre"><br>
+<label for="dni">DNI:</label>
+<input type="text" id="dni" name="dni"><br>
+<button onclick="insertarConSoap()">Grabar con servicio web SOAP</button>
+
+<h2>Listado consultado con REST</h2>
+<table border="1">
+  <thead>
+    <tr>
+      <th>Apellido</th>
+      <th>Nombre</th>
+      <th>DNI</th>
+    </tr>
+  </thead>
+  <tbody id="tabla-personas">
+    <!-- Los datos de la tabla se llenarán con la función consultarConRest() -->
+  </tbody>
+</table>
+
+</body>
+</html>
