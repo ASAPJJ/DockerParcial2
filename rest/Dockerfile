@@ -1,5 +1,5 @@
 # Utiliza la imagen base de Node.js 14 Alpine
-FROM node:14-alpine
+FROM node:18-alpine
 
 # Crea el directorio de trabajo dentro del contenedor
 WORKDIR /app
@@ -8,7 +8,7 @@ WORKDIR /app
 COPY package.json /app
 
 # Instala las dependencias
-RUN npm install --production
+RUN npm install
 
 # Copia el resto de los archivos de la aplicación
 COPY . /app

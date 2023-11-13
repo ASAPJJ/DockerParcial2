@@ -1,19 +1,45 @@
 const express = require('express');
 const soap = require('soap');
-const bodyParser = require('body-parser');
-const mysql = require('mysql');
+const { Sequelize, DataTypes } = require('sequelize');
+const cors = require('cors');
+
+// Configuración de Sequelize
+const sequelize = new Sequelize('personas_db', 'root', 'my-secret-pw', {
+  host: 'db',
+  dialect: 'mysql',
+});
+
+// Definición del modelo Persona
+const Persona = sequelize.define('Persona', {
+  Apellido: DataTypes.STRING,
+  Nombre: DataTypes.STRING,
+  DNI: DataTypes.STRING,
+}, {
+  tableName: 'personas',
+  timestamps: false,
+});
+
+// Iniciar y sincronizar Sequelize
+sequelize.sync();
+
+const app = express();
+app.use(cors());
+
+// Necesario para procesar el cuerpo de las solicitudes SOAP
+app.use(express.raw({ type: () => true, limit: '5mb' }));
 
 const service = {
   PersonService: {
     PersonServiceSoapPort: {
-      GetPersonDetails: function(args, callback) {
-        // Aquí implementas la consulta a la base de datos
-        connection.query('SELECT * FROM personas WHERE dni = ?', [args.dni], function (error, results) {
-          if (error) {
-            return callback(error);
-          }
-          callback(null, { person: results });
-        });
+      GetPersonDetails: async function(args, callback) {
+        try {
+          // Usar Sequelize para obtener los detalles de una persona
+          const persona = await Persona.findOne({ where: { DNI: args.dni } });
+          callback(null, { person: persona });
+        } catch (error) {
+          console.error('Error al consultar en la base de datos:', error);
+          callback(error);
+        }
       }
     }
   }
@@ -21,23 +47,7 @@ const service = {
 
 const xml = require('fs').readFileSync('PersonService.wsdl', 'utf8');
 
-// Crea la conexión a la base de datos
-const connection = mysql.createConnection({
-  host     : 'db', // Nombre del servicio de la base de datos en docker-compose.yml
-  user     : 'root',
-  password : 'my-secret-pw',
-  database : 'personas_db'
-});
-
-const app = express();
-
-// Se necesita bodyParser para manejar la solicitud SOAP
-app.use(bodyParser.raw({type: function() { return true; }, limit: '5mb'}));
 app.listen(8888, function() {
-  const wsdlPath = '/wsdl';
-  soap.listen(app, wsdlPath, service, xml, function(){
-    console.log('Servidor SOAP corriendo en el puerto 8888');
-  });
+  soap.listen(app, '/wsdl', service, xml);
+  console.log('Servidor SOAP corriendo en el puerto 8888');
 });
-
-// Aquí agregarías el WSDL y los archivos XSD necesarios para definir tu servicio SOAP.

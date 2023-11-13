@@ -10,6 +10,8 @@ services:
       MYSQL_PASSWORD: password
     volumes:
       - db-data:/var/lib/mysql
+    networks:
+      - backend
     deploy:
       replicas: 1
       update_config:
@@ -17,17 +19,16 @@ services:
         delay: 10s
       restart_policy:
         condition: on-failure
-    networks:
-      - backend
 
   soap-service:
-    build:
-      context: ./SOAP
+    image: jj/mi-soap-service:latest
     environment:
       DATABASE_HOST: db
       DATABASE_USER: user
       DATABASE_PASSWORD: password
       DATABASE_NAME: personas_db
+    networks:
+      - backend
     deploy:
       replicas: 1
       update_config:
@@ -35,17 +36,16 @@ services:
         delay: 10s
       restart_policy:
         condition: on-failure
-    networks:
-      - backend
 
   rest-service:
-    build:
-      context: ./rest
+    image: jj/mi-rest-service:latest
     environment:
       DATABASE_HOST: db
       DATABASE_USER: user
       DATABASE_PASSWORD: password
       DATABASE_NAME: personas_db
+    networks:
+      - backend
     deploy:
       replicas: 1
       update_config:
@@ -53,13 +53,11 @@ services:
         delay: 10s
       restart_policy:
         condition: on-failure
-    networks:
-      - backend
 
   web:
-    image: nginx:alpine
-    volumes:
-      - ./appweb:/usr/share/nginx/html:ro
+    image: jj/mi-web-service:latest
+    networks:
+      - backend
     deploy:
       replicas: 4
       update_config:
@@ -67,8 +65,8 @@ services:
         delay: 10s
       restart_policy:
         condition: on-failure
-    networks:
-      - backend
+    ports:
+      - "80:80"
 
 networks:
   backend:

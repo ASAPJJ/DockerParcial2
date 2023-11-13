@@ -1,88 +1,122 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>Aplicación Web para Consumo de Servicios</title>
-<style>
-  /* Aquí podrías añadir estilos para mejorar la presentación */
-</style>
-<script>
-  // Función para insertar datos usando el servicio SOAP
-  function insertarConSoap() {
-    var apellido = document.getElementById('apellido').value;
-    var nombre = document.getElementById('nombre').value;
-    var dni = document.getElementById('dni').value;
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplicación Web para Consumo de Servicios SOAP y REST</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+    <script>
+        // Cargar datos cuando la página se inicia
+        window.onload = function() {
+            consultarConRest();
+        };
 
-    // Aquí tendrías que construir el cuerpo del mensaje SOAP
-    var soapRequest =
-      `<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
-          <s:Body>
-            <InsertarPersona xmlns="http://tu-namespace-aquí">
-              <Apellido>${apellido}</Apellido>
-              <Nombre>${nombre}</Nombre>
-              <DNI>${dni}</DNI>
-            </InsertarPersona>
-          </s:Body>
-        </s:Envelope>`;
+        function insertarConSoap() {
+            var apellido = document.getElementById('apellido').value;
+            var nombre = document.getElementById('nombre').value;
+            var dni = document.getElementById('dni').value;
 
-    fetch('http://localhost:8080/insertar_con_soap', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'text/xml',
-        'SOAPAction': 'http://tu-namespace-aquí/InsertarPersona'
-      },
-      body: soapRequest
-    })
-    .then(response => response.text())
-    .then(responseXML => {
-      // Aquí procesarías la respuesta SOAP
-      console.log(responseXML);
-    })
-    .catch(error => console.error('Error:', error));
-  }
+            // Construcción del cuerpo del mensaje SOAP
+            var soapRequest =
+                `<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+                    <s:Body>
+                        <InsertarPersona xmlns="http://tu-namespace-aquí">
+                            <Apellido>${apellido}</Apellido>
+                            <Nombre>${nombre}</Nombre>
+                            <DNI>${dni}</DNI>
+                        </InsertarPersona>
+                    </s:Body>
+                </s:Envelope>`;
 
-  // Función para consultar datos usando el servicio REST
-  function consultarConRest() {
-    fetch('http://localhost:8888/consultar_con_rest')
-    .then(response => response.json())
-    .then(data => {
-      var tabla = document.getElementById('tabla-personas');
-      tabla.innerHTML = ''; // Limpiar la tabla antes de añadir los nuevos datos
-      data.forEach(persona => {
-        tabla.innerHTML += `<tr><td>${persona.Apellido}</td><td>${persona.Nombre}</td><td>${persona.DNI}</td></tr>`;
-      });
-    })
-    .catch(error => console.error('Error:', error));
-  }
+            fetch('http://localhost:8080/insertar_con_soap', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'text/xml',
+                    'SOAPAction': 'http://tu-namespace-aquí/InsertarPersona'
+                },
+                body: soapRequest
+            })
+            .then(response => response.text())
+            .then(responseXML => {
+                // Procesar la respuesta SOAP
+                console.log(responseXML);
+                // Llamar a la función para actualizar la lista de personas
+                consultarConRest();
+            })
+            .catch(error => console.error('Error:', error));
+        }
 
-  // Llamar a consultarConRest al cargar la página para llenar la tabla inicialmente
-  window.onload = consultarConRest;
-</script>
+        function consultarConRest() {
+            fetch('http://localhost:8888/consultar_con_rest')
+            .then(response => response.json())
+            .then(data => {
+                var tabla = document.getElementById('tablaPersonas');
+                tabla.innerHTML = "<tr><th>Apellido</th><th>Nombre</th><th>DNI</th></tr>"; // Limpiar y establecer cabeceras de la tabla
+                data.forEach(persona => {
+                    tabla.innerHTML += `<tr><td>${persona.Apellido}</td><td>${persona.Nombre}</td><td>${persona.DNI}</td></tr>`;
+                });
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function agregarPersona(event) {
+            event.preventDefault();
+            var apellido = document.getElementById('apellido');
+            var nombre = document.getElementById('nombre');
+            var dni = document.getElementById('dni');
+
+            fetch('http://localhost:8080/insertar_con_rest', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({"Apellido": apellido.value, "Nombre": nombre.value, "DNI": dni.value})
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert("Persona agregada con éxito");
+                apellido.value = '';
+                nombre.value = '';
+                dni.value = '';
+                consultarConRest(); // Recargar los datos
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+        
+    </script>
 </head>
 <body>
+    <h1>Consumir Servicio SOAP y REST</h1>
 
-<h2>Ingresar Datos de Persona</h2>
-<label for="apellido">Apellido:</label>
-<input type="text" id="apellido" name="apellido"><br>
-<label for="nombre">Nombre:</label>
-<input type="text" id="nombre" name="nombre"><br>
-<label for="dni">DNI:</label>
-<input type="text" id="dni" name="dni"><br>
-<button onclick="insertarConSoap()">Grabar con servicio web SOAP</button>
+    <!-- Formulario para agregar nuevas personas -->
+    <form onSubmit="agregarPersona(event);">
+        <input type="text" id="apellido" placeholder="Apellido" required />
+        <input type="text" id="nombre" placeholder="Nombre" required />
+        <input type="text" id="dni" placeholder="DNI" required />
+        <input type="submit" value="Agregar Persona" />
+    </form>
 
-<h2>Listado consultado con REST</h2>
-<table border="1">
-  <thead>
-    <tr>
-      <th>Apellido</th>
-      <th>Nombre</th>
-      <th>DNI</th>
-    </tr>
-  </thead>
-  <tbody id="tabla-personas">
-    <!-- Los datos de la tabla se llenarán con la función consultarConRest() -->
-  </tbody>
-</table>
-
+    <h2>Listado de Personas</h2>
+    <table id="tablaPersonas">
+        <!-- Los datos de la tabla se llenarán con la función consultarConRest() -->
+    </table>
 </body>
 </html>
