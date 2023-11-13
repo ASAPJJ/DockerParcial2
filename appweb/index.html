@@ -21,87 +21,6 @@
             background-color: #f2f2f2;
         }
     </style>
-    <script>
-        // Cargar datos cuando la página se inicia
-        window.onload = function() {
-            consultarConRest();
-        };
-
-        function insertarConSoap() {
-            var apellido = document.getElementById('apellido').value;
-            var nombre = document.getElementById('nombre').value;
-            var dni = document.getElementById('dni').value;
-
-            // Construcción del cuerpo del mensaje SOAP
-            var soapRequest =
-                `<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
-                    <s:Body>
-                        <InsertarPersona xmlns="http://tu-namespace-aquí">
-                            <Apellido>${apellido}</Apellido>
-                            <Nombre>${nombre}</Nombre>
-                            <DNI>${dni}</DNI>
-                        </InsertarPersona>
-                    </s:Body>
-                </s:Envelope>`;
-
-            fetch('http://localhost:8080/insertar_con_soap', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'text/xml',
-                    'SOAPAction': 'http://tu-namespace-aquí/InsertarPersona'
-                },
-                body: soapRequest
-            })
-            .then(response => response.text())
-            .then(responseXML => {
-                // Procesar la respuesta SOAP
-                console.log(responseXML);
-                // Llamar a la función para actualizar la lista de personas
-                consultarConRest();
-            })
-            .catch(error => console.error('Error:', error));
-        }
-
-        function consultarConRest() {
-            fetch('http://localhost:8888/consultar_con_rest')
-            .then(response => response.json())
-            .then(data => {
-                var tabla = document.getElementById('tablaPersonas');
-                tabla.innerHTML = "<tr><th>Apellido</th><th>Nombre</th><th>DNI</th></tr>";
-                data.forEach(persona => {
-                    tabla.innerHTML += `<tr><td>${persona.Apellido}</td><td>${persona.Nombre}</td><td>${persona.DNI}</td></tr>`;
-                });
-            })
-            .catch(error => console.error('Error:', error));
-        }
-
-        function agregarPersona(event) {
-            event.preventDefault();
-            var apellido = document.getElementById('apellido');
-            var nombre = document.getElementById('nombre');
-            var dni = document.getElementById('dni');
-
-            fetch('http://localhost:8080/insertar_con_rest', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({"Apellido": apellido.value, "Nombre": nombre.value, "DNI": dni.value})
-            })
-            .then(response => response.json())
-            .then(data => {
-                alert("Persona agregada con éxito");
-                apellido.value = '';
-                nombre.value = '';
-                dni.value = '';
-                consultarConRest(); // Recargar los datos
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-            });
-        }
-        
-    </script>
 </head>
 <body>
     <h1>Consumir Servicio SOAP y REST</h1>
@@ -117,5 +36,90 @@
     <h2>Listado de Personas</h2>
     <table id="tablaPersonas">
     </table>
+
+    <script>
+        // Cargar datos cuando la página se inicia
+        window.onload = function() {
+            consultarConRest();
+        };
+
+        function insertarConSoap() {
+    var dni = document.getElementById('dni').value;
+
+    // Construcción del cuerpo del mensaje SOAP
+    var soapRequest =
+        `<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+            <s:Body>
+                <GetPersonDetailsRequest xmlns="http://www.example.org/personservice">
+                    <dni>${dni}</dni>
+                </GetPersonDetailsRequest>
+            </s:Body>
+        </s:Envelope>`;
+
+    fetch('http://localhost:8888/personservice', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'text/xml',
+            'SOAPAction': 'http://www.example.org/personservice/GetPersonDetails'
+        },
+        body: soapRequest
+    })
+    .then(response => response.text())
+    .then(responseXML => {
+        // Procesar la respuesta SOAP
+        console.log(responseXML);
+        // Aquí deberías analizar la respuesta y actualizar la interfaz de usuario según sea necesario
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+        function consultarConRest() {
+            fetch('http://localhost:8080/consultar_con_rest') // Asegúrate de que esta URL es correcta
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                var tabla = document.getElementById('tablaPersonas');
+                tabla.innerHTML = "<tr><th>Apellido</th><th>Nombre</th><th>DNI</th></tr>";
+                data.forEach(persona => {
+                    tabla.innerHTML += `<tr><td>${persona.Apellido}</td><td>${persona.Nombre}</td><td>${persona.DNI}</td></tr>`;
+                });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Hubo un error al cargar los datos de las personas.');
+            });
+        }
+
+        function agregarPersona(event) {
+            event.preventDefault();
+            var apellido = document.getElementById('apellido').value;
+            var nombre = document.getElementById('nombre').value;
+            var dni = document.getElementById('dni').value;
+
+            fetch('http://localhost:8080/insertar_con_rest', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({"Apellido": apellido, "Nombre": nombre, "DNI": dni})
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert("Persona agregada con éxito");
+                apellido.value = '';
+                nombre.value = '';
+                dni.value = '';
+                consultarConRest(); // Recargar los datos
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                alert('Hubo un error al intentar agregar la persona.');
+            });
+        }
+    </script>
 </body>
 </html>

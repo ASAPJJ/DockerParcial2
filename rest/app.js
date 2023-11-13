@@ -24,7 +24,16 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// Endpoint para insertar una persona utilizando Sequelize
+app.get('/consultar_con_rest', async (req, res) => {
+  try {
+    const personas = await Persona.findAll();
+    return res.status(200).json(personas);
+  } catch (error) {
+    console.error('Error al consultar personas:', error);
+    return res.status(500).send({ message: "Error al consultar datos", error: error });
+  }
+});
+
 app.post('/insertar_con_rest', async (req, res) => {
   try {
     const { Apellido, Nombre, DNI } = req.body;

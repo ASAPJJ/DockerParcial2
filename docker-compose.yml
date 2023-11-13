@@ -22,6 +22,8 @@ services:
 
   soap-service:
     image: jj/mi-soap-service:latest
+    ports:
+      - "8888:8888"
     environment:
       DATABASE_HOST: db
       DATABASE_USER: user
@@ -39,6 +41,8 @@ services:
 
   rest-service:
     image: jj/mi-rest-service:latest
+    ports:
+      - "8080:8080"
     environment:
       DATABASE_HOST: db
       DATABASE_USER: user
