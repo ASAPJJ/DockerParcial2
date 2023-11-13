@@ -67,7 +67,7 @@
             .then(response => response.json())
             .then(data => {
                 var tabla = document.getElementById('tablaPersonas');
-                tabla.innerHTML = "<tr><th>Apellido</th><th>Nombre</th><th>DNI</th></tr>"; // Limpiar y establecer cabeceras de la tabla
+                tabla.innerHTML = "<tr><th>Apellido</th><th>Nombre</th><th>DNI</th></tr>";
                 data.forEach(persona => {
                     tabla.innerHTML += `<tr><td>${persona.Apellido}</td><td>${persona.Nombre}</td><td>${persona.DNI}</td></tr>`;
                 });
@@ -116,7 +116,6 @@
 
     <h2>Listado de Personas</h2>
     <table id="tablaPersonas">
-        <!-- Los datos de la tabla se llenarán con la función consultarConRest() -->
     </table>
 </body>
 </html>
